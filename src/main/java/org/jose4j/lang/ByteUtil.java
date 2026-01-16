@@ -19,8 +19,6 @@ package org.jose4j.lang;
 
 import org.jose4j.base64url.Base64Url;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -101,19 +99,31 @@ public class ByteUtil
 
     public static byte[] concat(byte[]... byteArrays)
     {
-        try
+        // Calculate total length to pre-allocate array and avoid resizing
+        int totalLength = 0;
+        for (byte[] array : byteArrays)
         {
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            for (byte[] bytes : byteArrays)
+            if (array != null)
             {
-                byteArrayOutputStream.write(bytes);
+                totalLength += array.length;
             }
-            return byteArrayOutputStream.toByteArray();
         }
-        catch (IOException e)
+
+        // Allocate result array with exact size - no resizing needed
+        byte[] result = new byte[totalLength];
+        int position = 0;
+
+        // Copy each array into the result
+        for (byte[] array : byteArrays)
         {
-            throw new IllegalStateException("IOEx from ByteArrayOutputStream?!", e);
+            if (array != null && array.length > 0)
+            {
+                System.arraycopy(array, 0, result, position, array.length);
+                position += array.length;
+            }
         }
+
+        return result;
     }
 
     public static byte[] subArray(byte[] inputBytes, int startPos, int length)

@@ -10,7 +10,7 @@ class Yylex {
   public static final int YYEOF = -1;
 
   /** initial size of the lookahead buffer */
-  private static final int ZZ_BUFFERSIZE = 16384;
+  static final int ZZ_BUFFERSIZE = 512;
 
   /** lexical states */
   public static final int YYINITIAL = 0;
@@ -230,7 +230,7 @@ class Yylex {
 
   /** this buffer contains the current text to be matched and is
       the source of the yytext() string */
-  private char zzBuffer[] = new char[ZZ_BUFFERSIZE];
+  private char zzBuffer[];
 
   /** the textposition at the last accepting state */
   private int zzMarkedPos;
@@ -281,7 +281,18 @@ int getPosition(){
    * @param   in  the java.io.Reader to read input from.
    */
   Yylex(java.io.Reader in) {
+    this(in, ZZ_BUFFERSIZE);
+  }
+
+  /**
+   * Creates a new scanner with a custom buffer size.
+   *
+   * @param   in  the java.io.Reader to read input from.
+   * @param   bufferSize  the initial buffer size.
+   */
+  Yylex(java.io.Reader in, int bufferSize) {
     this.zzReader = in;
+    this.zzBuffer = new char[Math.max(bufferSize, 16)]; // minimum size of 16
   }
 
   /**

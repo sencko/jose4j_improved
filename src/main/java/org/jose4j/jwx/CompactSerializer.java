@@ -40,9 +40,27 @@ public class CompactSerializer
         return parts;
     }
 
+    static int calculateCapacity(String... parts)
+    {
+        int capacity = 0;
+        for (String part : parts)
+        {
+            if (part != null)
+            {
+                capacity += part.length();
+            }
+        }
+        if (parts.length > 1)
+        {
+            capacity += PERIOD_SEPARATOR.length() * (parts.length - 1);
+        }
+        return capacity;
+    }
+
     public static String serialize(String... parts)
     {
-        StringBuilder sb = new StringBuilder();
+        int capacity = calculateCapacity(parts);
+        StringBuilder sb = new StringBuilder(capacity);
         for (int i = 0; i < parts.length; i++)
         {
             String part = (parts[i] == null) ? EMPTY_STRING : parts[i];

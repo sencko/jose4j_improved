@@ -31,7 +31,7 @@ public class JSONParser {
 	public static final int S_IN_ERROR=-1;
 	
 	private LinkedList handlerStatusStack;
-	private Yylex lexer = new Yylex((Reader)null);
+	private Yylex lexer = null;
 	private Yytoken token = null;
 	private int status = S_INIT;
 	
@@ -58,7 +58,21 @@ public class JSONParser {
      * @param in - The new character reader.
      */
 	public void reset(Reader in){
-		lexer.yyreset(in);
+		reset(in, Yylex.ZZ_BUFFERSIZE);
+	}
+	
+	/**
+	 * Reset the parser to the initial state with a new character reader and buffer size.
+	 * 
+	 * @param in - The new character reader.
+	 * @param bufferSize - The initial buffer size for the lexer.
+	 */
+	private void reset(Reader in, int bufferSize){
+		if (lexer == null) {
+			lexer = new Yylex(in, bufferSize);
+		} else {
+			lexer.yyreset(in);
+		}
 		reset();
 	}
 	
@@ -75,8 +89,11 @@ public class JSONParser {
 	
 	public Object parse(String s, ContainerFactory containerFactory) throws ParseException{
 		StringReader in=new StringReader(s);
+		// Use string length as buffer size hint
+		int bufferSize = s.length() + 1;
+		reset(in, bufferSize);
 		try{
-			return parse(in, containerFactory);
+			return parseInternal(containerFactory);
 		}
 		catch(IOException ie){
 			/*
@@ -108,6 +125,10 @@ public class JSONParser {
 	 */
 	public Object parse(Reader in, ContainerFactory containerFactory) throws IOException, ParseException{
 		reset(in);
+		return parseInternal(containerFactory);
+	}
+	
+	private Object parseInternal(ContainerFactory containerFactory) throws IOException, ParseException{
 		LinkedList statusStack = new LinkedList();
 		LinkedList valueStack = new LinkedList();
 		
@@ -295,8 +316,13 @@ public class JSONParser {
 	
 	public void parse(String s, ContentHandler contentHandler, boolean isResume) throws ParseException{
 		StringReader in=new StringReader(s);
+		// Use string length as buffer size hint
+		int bufferSize = s.length() + 1;
 		try{
-			parse(in, contentHandler, isResume);
+			if(!isResume){
+				reset(in, bufferSize);
+			}
+			parseWithContentHandler(in, contentHandler, isResume, bufferSize);
 		}
 		catch(IOException ie){
 			/*
@@ -325,14 +351,18 @@ public class JSONParser {
 	 * @throws ParseException ParseException
 	 */
 	public void parse(Reader in, ContentHandler contentHandler, boolean isResume) throws IOException, ParseException{
+		parseWithContentHandler(in, contentHandler, isResume, 512);
+	}
+	
+	private void parseWithContentHandler(Reader in, ContentHandler contentHandler, boolean isResume, int bufferSize) throws IOException, ParseException{
 		if(!isResume){
-			reset(in);
+			reset(in, bufferSize);
 			handlerStatusStack = new LinkedList();
 		}
 		else{
 			if(handlerStatusStack == null){
 				isResume = false;
-				reset(in);
+				reset(in, bufferSize);
 				handlerStatusStack = new LinkedList();
 			}
 		}

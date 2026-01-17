@@ -239,7 +239,13 @@ public class JSONValue {
 	 * @return JSON text, or "null" if value is null or it's an NaN or an INF number.
 	 */
 	public static String toJSONString(Object value){
-		final StringBuilderWriter writer = new StringBuilderWriter();
+		int initialSize = 32;
+		if (value instanceof Map){
+			initialSize = ((Map<?,?>)value).size() * 25;
+		} else if (value instanceof Collection){
+			initialSize = ((Collection<?>)value).size() * 25;
+		}
+		final StringBuilderWriter writer = new StringBuilderWriter(initialSize);
 		
 		try{
 			writeJSONString(value, writer);

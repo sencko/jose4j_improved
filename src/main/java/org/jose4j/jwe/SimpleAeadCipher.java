@@ -22,6 +22,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.spec.GCMParameterSpec;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.jose4j.keys.AesKey;
 import org.jose4j.lang.ByteUtil;
@@ -35,6 +36,7 @@ import org.slf4j.Logger;
 public class SimpleAeadCipher
 {
     public static final String GCM_TRANSFORMATION_NAME = "AES/GCM/NoPadding";
+    private static final ConcurrentHashMap<String, Boolean> availabilityCache = new ConcurrentHashMap<>();
 
     private String algorithm;
     private int tagByteLength;
@@ -117,30 +119,34 @@ public class SimpleAeadCipher
 
     public boolean isAvailable(Logger log, int keyByteLength, int ivByteLength, String joseAlg)
     {
-        boolean isAvailable = false;
-        // The Sun/Oracle provider in Java 7 doesn't have GCM.
-        // Bouncy Castle prior to 1.50 would let you get a cipher with AES/GCM/NoPadding but it but
-        // didn't fully support the JCE AEAD interfaces and would fail (on initialization with the
-        // GCMParameterSpec, IIRC) when trying to encrypt/decrypt. So seems the only good way to see if GCM
-        // is really there is to try it...
+        // Include keyByteLength and ivByteLength in cache key because export regulations
+        // may make some key lengths unavailable even if the algorithm is generally available
+        String cacheKey = joseAlg + ":" + keyByteLength + ":" + ivByteLength;
+        return availabilityCache.computeIfAbsent(cacheKey, key -> {
+            // The Sun/Oracle provider in Java 7 doesn't have GCM.
+            // Bouncy Castle prior to 1.50 would let you get a cipher with AES/GCM/NoPadding but it but
+            // didn't fully support the JCE AEAD interfaces and would fail (on initialization with the
+            // GCMParameterSpec, IIRC) when trying to encrypt/decrypt. So seems the only good way to see if GCM
+            // is really there is to try it...
 
-        if (CipherStrengthSupport.isAvailable(algorithm, keyByteLength))
-        {
-            byte[] plain = new byte[] {112,108,97,105,110,116,101,120,116};
-            byte[] aad = new byte[] {97,97,100};
-            byte[] cek = ByteUtil.randomBytes(keyByteLength);
-            byte[] iv = ByteUtil.randomBytes(ivByteLength);
-            try
+            if (CipherStrengthSupport.isAvailable(algorithm, keyByteLength))
             {
-                encrypt(new AesKey(cek), iv, plain, aad, null);
-                isAvailable = true;
+                byte[] plain = new byte[] {112,108,97,105,110,116,101,120,116};
+                byte[] aad = new byte[] {97,97,100};
+                byte[] cek = ByteUtil.randomBytes(keyByteLength);
+                byte[] iv = ByteUtil.randomBytes(ivByteLength);
+                try
+                {
+                    encrypt(new AesKey(cek), iv, plain, aad, null);
+                    return true;
+                }
+                catch (Throwable e)
+                {
+                    log.debug("{} is not available ({}).", joseAlg, ExceptionHelp.toStringWithCauses(e));
+                }
             }
-            catch (Throwable e)
-            {
-                log.debug("{} is not available ({}).", joseAlg, ExceptionHelp.toStringWithCauses(e));
-            }
-        }
-        return isAvailable;
+            return false;
+        });
     }
 
     public static class CipherOutput

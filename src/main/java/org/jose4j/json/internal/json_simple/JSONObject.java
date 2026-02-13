@@ -5,7 +5,6 @@
 package org.jose4j.json.internal.json_simple;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -63,7 +62,7 @@ public class JSONObject extends HashMap implements Map, JSONAware, JSONStreamAwa
                 out.write(',');
 			Map.Entry entry=(Map.Entry)iter.next();
             out.write('\"');
-            out.write(escape(String.valueOf(entry.getKey())));
+            JSONValue.escape(String.valueOf(entry.getKey()), out);
             out.write('\"');
             out.write(':');
 			JSONValue.writeJSONString(entry.getValue(), out);
@@ -85,13 +84,13 @@ public class JSONObject extends HashMap implements Map, JSONAware, JSONStreamAwa
 	 * @return JSON text, or "null" if map is null.
 	 */
 	public static String toJSONString(Map map){
-		final StringWriter writer = new StringWriter();
+		final StringBuilderWriter writer = new StringBuilderWriter();
 		
 		try {
 			writeJSONString(map, writer);
 			return writer.toString();
 		} catch (IOException e) {
-			// This should never happen with a StringWriter
+			// This should never happen with a StringBuilderWriter
 			throw new RuntimeException(e);
 		}
 	}
@@ -109,8 +108,12 @@ public class JSONObject extends HashMap implements Map, JSONAware, JSONStreamAwa
         sb.append('\"');
         if(key == null)
             sb.append("null");
-        else
-            JSONValue.escape(key, sb);
+		else
+			try {
+				JSONValue.escape(key, sb);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 		sb.append('\"').append(':');
 		
 		sb.append(JSONValue.toJSONString(value));

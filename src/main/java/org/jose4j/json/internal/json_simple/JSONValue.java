@@ -7,7 +7,6 @@ package org.jose4j.json.internal.json_simple;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Collection;
 // import java.util.List;
@@ -126,7 +125,7 @@ public class JSONValue {
 		
 		if(value instanceof String){		
             out.write('\"');
-			out.write(escape((String)value));
+			escape((String)value, out);
             out.write('\"');
 			return;
 		}
@@ -240,13 +239,19 @@ public class JSONValue {
 	 * @return JSON text, or "null" if value is null or it's an NaN or an INF number.
 	 */
 	public static String toJSONString(Object value){
-		final StringWriter writer = new StringWriter();
+		int initialSize = 32;
+		if (value instanceof Map){
+			initialSize = ((Map<?,?>)value).size() * 25;
+		} else if (value instanceof Collection){
+			initialSize = ((Collection<?>)value).size() * 25;
+		}
+		final StringBuilderWriter writer = new StringBuilderWriter(initialSize);
 		
 		try{
 			writeJSONString(value, writer);
 			return writer.toString();
 		} catch(IOException e){
-			// This should never happen for a StringWriter
+			// This should never happen for a StringBuilderWriter
 			throw new RuntimeException(e);
 		}
 	}
@@ -260,15 +265,21 @@ public class JSONValue {
 		if(s==null)
 			return null;
         StringBuilder sb = new StringBuilder();
-        escape(s, sb);
+        try {
+			escape(s, sb);
+		} catch (IOException e) {
+			// This should never happen for a StringBuilder
+			throw new RuntimeException(e);
+		}
         return sb.toString();
     }
 
     /**
      * @param s - Must not be null.
      * @param sb
+     * @throws IOException 
      */
-    static void escape(String s, StringBuilder sb) {
+    static void escape(String s, Appendable sb) throws IOException {
     	final int len = s.length();
 		for(int i=0;i<len;i++){
 			char ch=s.charAt(i);

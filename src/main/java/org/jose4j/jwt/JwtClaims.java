@@ -38,7 +38,8 @@ public class JwtClaims
 
     public JwtClaims()
     {
-        claimsMap = new LinkedHashMap<>();
+        // Most JWTs have 5-10 claims, pre-size to avoid resizing
+        claimsMap = new LinkedHashMap<>(16);
     }
 
     private JwtClaims(String jsonClaims, JwtContext jwtContext) throws InvalidJwtException

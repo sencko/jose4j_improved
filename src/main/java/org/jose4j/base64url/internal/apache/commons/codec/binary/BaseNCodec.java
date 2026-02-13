@@ -354,8 +354,17 @@ public abstract class BaseNCodec {
             return pArray;
         }
         final Context context = new Context();
+        // Calculate estimated decoded size and pre-allocate buffer
+        final int estimatedSize = getEstimatedDecodeSize(pArray.length);
+        if (estimatedSize > 0) {
+            context.buffer = new byte[estimatedSize];
+        }
         decode(pArray, 0, pArray.length, context);
         decode(pArray, 0, EOF, context); // Notify decoder of EOF.
+        // If buffer is completely full, return it directly without copying
+        if (context.buffer != null && context.pos == context.buffer.length) {
+            return context.buffer;
+        }
         final byte[] result = new byte[context.pos];
         readResults(result, 0, result.length, context);
         return result;
@@ -373,9 +382,19 @@ public abstract class BaseNCodec {
             return pArray;
         }
         final Context context = new Context();
+        // Calculate exact encoded size and pre-allocate buffer
+        final long encodedLength = getEncodedLength(pArray);
+        if (encodedLength > 0 && encodedLength <= Integer.MAX_VALUE) {
+            context.buffer = new byte[(int) encodedLength];
+        }
         encode(pArray, 0, pArray.length, context);
         encode(pArray, 0, EOF, context); // Notify encoder of EOF.
-        final byte[] buf = new byte[context.pos - context.readPos];
+        final int resultSize = context.pos - context.readPos;
+        // If buffer is completely full, return it directly without copying
+        if (context.buffer != null && resultSize == context.buffer.length && context.readPos == 0) {
+            return context.buffer;
+        }
+        final byte[] buf = new byte[resultSize];
         readResults(buf, 0, buf.length, context);
         return buf;
     }
@@ -467,5 +486,20 @@ public abstract class BaseNCodec {
             len += ((len + lineLength-1) / lineLength) * chunkSeparatorLength;
         }
         return len;
+    }
+
+    /**
+     * Estimates the amount of space needed to decode the supplied array.
+     * This is an estimate because we can't know exactly without processing the data
+     * (e.g., padding, whitespace, invalid characters).
+     *
+     * @param encodedSize the size of the encoded data
+     *
+     * @return estimated amount of space needed to decode the data
+     */
+    protected int getEstimatedDecodeSize(final int encodedSize) {
+        // Estimate: encoded block size maps to unencoded block size
+        // Add extra space to handle edge cases
+        return ((encodedSize + encodedBlockSize - 1) / encodedBlockSize) * unencodedBlockSize + unencodedBlockSize;
     }
 }

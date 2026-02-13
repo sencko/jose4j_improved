@@ -117,4 +117,74 @@ public class CompactSerializerTest extends TestCase
         String cs = CompactSerializer.serialize("one", "", "three", "four", "five");
         assertEquals("one..three.four.five", cs);
     }
+
+    public void testCalculateCapacity1()
+    {
+        int capacity = CompactSerializer.calculateCapacity("one", "two", "three");
+        // "one" = 3, "two" = 3, "three" = 5, separators = 2 * 1 = 2
+        // Total = 3 + 3 + 5 + 2 = 13
+        assertEquals(13, capacity);
+        String serialized = CompactSerializer.serialize("one", "two", "three");
+        assertEquals(serialized.length(), capacity);
+    }
+
+    public void testCalculateCapacity2()
+    {
+        int capacity = CompactSerializer.calculateCapacity("abc", "def", "ghi", "jkl");
+        // "abc" = 3, "def" = 3, "ghi" = 3, "jkl" = 3, separators = 3 * 1 = 3
+        // Total = 3 + 3 + 3 + 3 + 3 = 15
+        assertEquals(15, capacity);
+        String serialized = CompactSerializer.serialize("abc", "def", "ghi", "jkl");
+        assertEquals(serialized.length(), capacity);
+    }
+
+    public void testCalculateCapacityWithNulls()
+    {
+        int capacity = CompactSerializer.calculateCapacity("one", null, "three");
+        // "one" = 3, null = 0, "three" = 5, separators = 2 * 1 = 2
+        // Total = 3 + 0 + 5 + 2 = 10
+        assertEquals(10, capacity);
+        String serialized = CompactSerializer.serialize("one", null, "three");
+        assertEquals(serialized.length(), capacity);
+    }
+
+    public void testCalculateCapacityWithEmptyStrings()
+    {
+        int capacity = CompactSerializer.calculateCapacity("one", "", "three");
+        // "one" = 3, "" = 0, "three" = 5, separators = 2 * 1 = 2
+        // Total = 3 + 0 + 5 + 2 = 10
+        assertEquals(10, capacity);
+        String serialized = CompactSerializer.serialize("one", "", "three");
+        assertEquals(serialized.length(), capacity);
+    }
+
+    public void testCalculateCapacitySinglePart()
+    {
+        int capacity = CompactSerializer.calculateCapacity("onlypart");
+        // "onlypart" = 8, no separators
+        // Total = 8
+        assertEquals(8, capacity);
+        String serialized = CompactSerializer.serialize("onlypart");
+        assertEquals(serialized.length(), capacity);
+    }
+
+    public void testCalculateCapacityEmptyArray()
+    {
+        int capacity = CompactSerializer.calculateCapacity();
+        // No parts, no separators
+        // Total = 0
+        assertEquals(0, capacity);
+        String serialized = CompactSerializer.serialize();
+        assertEquals(serialized.length(), capacity);
+    }
+
+    public void testCalculateCapacityAllNulls()
+    {
+        int capacity = CompactSerializer.calculateCapacity(null, null, null);
+        // All nulls = 0 + 0 + 0, separators = 2 * 1 = 2
+        // Total = 0 + 0 + 0 + 2 = 2
+        assertEquals(2, capacity);
+        String serialized = CompactSerializer.serialize(null, null, null);
+        assertEquals(serialized.length(), capacity);
+    }
 }

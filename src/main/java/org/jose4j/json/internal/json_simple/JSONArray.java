@@ -5,7 +5,6 @@
 package org.jose4j.json.internal.json_simple;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -87,13 +86,13 @@ public class JSONArray extends ArrayList implements JSONAware, JSONStreamAware {
 	 * @return JSON text, or "null" if list is null.
 	 */
 	public static String toJSONString(Collection collection){
-		final StringWriter writer = new StringWriter();
+		final StringBuilderWriter writer = new StringBuilderWriter();
 		
 		try {
 			writeJSONString(collection, writer);
 			return writer.toString();
 		} catch(IOException e){
-			// This should never happen for a StringWriter
+			// This should never happen for a StringBuilderWriter
 			throw new RuntimeException(e);
 		}
 	}
@@ -117,13 +116,13 @@ public class JSONArray extends ArrayList implements JSONAware, JSONStreamAware {
 	}
 	
 	public static String toJSONString(byte[] array){
-		final StringWriter writer = new StringWriter();
+		final StringBuilderWriter writer = new StringBuilderWriter();
 		
 		try {
 			writeJSONString(array, writer);
 			return writer.toString();
 		} catch(IOException e){
-			// This should never happen for a StringWriter
+			// This should never happen for a StringBuilderWriter
 			throw new RuntimeException(e);
 		}
 	}
@@ -147,13 +146,13 @@ public class JSONArray extends ArrayList implements JSONAware, JSONStreamAware {
 	}
 	
 	public static String toJSONString(short[] array){
-		final StringWriter writer = new StringWriter();
+		final StringBuilderWriter writer = new StringBuilderWriter();
 		
 		try {
 			writeJSONString(array, writer);
 			return writer.toString();
 		} catch(IOException e){
-			// This should never happen for a StringWriter
+			// This should never happen for a StringBuilderWriter
 			throw new RuntimeException(e);
 		}
 	}
@@ -177,13 +176,13 @@ public class JSONArray extends ArrayList implements JSONAware, JSONStreamAware {
 	}
 	
 	public static String toJSONString(int[] array){
-		final StringWriter writer = new StringWriter();
+		final StringBuilderWriter writer = new StringBuilderWriter();
 		
 		try {
 			writeJSONString(array, writer);
 			return writer.toString();
 		} catch(IOException e){
-			// This should never happen for a StringWriter
+			// This should never happen for a StringBuilderWriter
 			throw new RuntimeException(e);
 		}
 	}
@@ -207,13 +206,13 @@ public class JSONArray extends ArrayList implements JSONAware, JSONStreamAware {
 	}
 	
 	public static String toJSONString(long[] array){
-		final StringWriter writer = new StringWriter();
+		final StringBuilderWriter writer = new StringBuilderWriter();
 		
 		try {
 			writeJSONString(array, writer);
 			return writer.toString();
 		} catch(IOException e){
-			// This should never happen for a StringWriter
+			// This should never happen for a StringBuilderWriter
 			throw new RuntimeException(e);
 		}
 	}
@@ -237,13 +236,13 @@ public class JSONArray extends ArrayList implements JSONAware, JSONStreamAware {
 	}
 	
 	public static String toJSONString(float[] array){
-		final StringWriter writer = new StringWriter();
+		final StringBuilderWriter writer = new StringBuilderWriter();
 		
 		try {
 			writeJSONString(array, writer);
 			return writer.toString();
 		} catch(IOException e){
-			// This should never happen for a StringWriter
+			// This should never happen for a StringBuilderWriter
 			throw new RuntimeException(e);
 		}
 	}
@@ -267,13 +266,13 @@ public class JSONArray extends ArrayList implements JSONAware, JSONStreamAware {
 	}
 	
 	public static String toJSONString(double[] array){
-		final StringWriter writer = new StringWriter();
+		final StringBuilderWriter writer = new StringBuilderWriter();
 		
 		try {
 			writeJSONString(array, writer);
 			return writer.toString();
 		} catch(IOException e){
-			// This should never happen for a StringWriter
+			// This should never happen for a StringBuilderWriter
 			throw new RuntimeException(e);
 		}
 	}
@@ -297,13 +296,13 @@ public class JSONArray extends ArrayList implements JSONAware, JSONStreamAware {
 	}
 	
 	public static String toJSONString(boolean[] array){
-		final StringWriter writer = new StringWriter();
+		final StringBuilderWriter writer = new StringBuilderWriter();
 		
 		try {
 			writeJSONString(array, writer);
 			return writer.toString();
 		} catch(IOException e){
-			// This should never happen for a StringWriter
+			// This should never happen for a StringBuilderWriter
 			throw new RuntimeException(e);
 		}
 	}
@@ -315,11 +314,11 @@ public class JSONArray extends ArrayList implements JSONAware, JSONStreamAware {
 			out.write("[]");
 		} else {
 			out.write("[\"");
-			out.write(JSONValue.escape(String.valueOf(array[0])));
+			JSONValue.escape(String.valueOf(array[0]), out);
 			
 			for(int i = 1; i < array.length; i++){
 				out.write("\",\"");
-				out.write(JSONValue.escape(String.valueOf(array[i])));
+				JSONValue.escape(String.valueOf(array[i]), out);
 			}
 			
 			out.write("\"]");
@@ -327,13 +326,13 @@ public class JSONArray extends ArrayList implements JSONAware, JSONStreamAware {
 	}
 	
 	public static String toJSONString(char[] array){
-		final StringWriter writer = new StringWriter();
+		final StringBuilderWriter writer = new StringBuilderWriter();
 		
 		try {
 			writeJSONString(array, writer);
 			return writer.toString();
 		} catch(IOException e){
-			// This should never happen for a StringWriter
+			// This should never happen for a StringBuilderWriter
 			throw new RuntimeException(e);
 		}
 	}
@@ -357,13 +356,13 @@ public class JSONArray extends ArrayList implements JSONAware, JSONStreamAware {
 	}
 	
 	public static String toJSONString(Object[] array){
-		final StringWriter writer = new StringWriter();
+		final StringBuilderWriter writer = new StringBuilderWriter();
 		
 		try {
 			writeJSONString(array, writer);
 			return writer.toString();
 		} catch(IOException e){
-			// This should never happen for a StringWriter
+			// This should never happen for a StringBuilderWriter
 			throw new RuntimeException(e);
 		}
 	}
